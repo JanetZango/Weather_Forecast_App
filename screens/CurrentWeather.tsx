@@ -29,6 +29,8 @@ const CurrentWeather = () => {
   const [latitude, setLatitude] =useState<string | number>("");
   const [cityname, setCityName] = useState('');
   const [weatherstatus, setWeatherStatus] = useState('');
+  const [humidity,setHumidity] = useState('');
+  const [weatherdata,setWeatherData] = useState('');
 
 
 
@@ -63,17 +65,49 @@ const CurrentWeather = () => {
   const getCurrentLocation = () => {
     Geolocation.getCurrentPosition(
       (position) => {
+        console.log(position)
         setLocation(position);
-        console.log(position.coords.latitude);
-        console.log(position.coords.longitude);
-        const latitute = position.coords.longitude
-        console.log(latitute)
-
-        setLatitude(latitute);
-        setLongitude(position.coords.longitude);
-
-        console.log(latitude)
-     
+        const getLongitude = position.coords.longitude
+        const getLatitude = position.coords.latitude
+        const fetchData = async () => {
+          const appid = "16ea865e0fb96ed2bbafbef75005c594";
+          try {
+            const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${getLatitude}&lon=${getLongitude}&appid=${appid}`);
+            if (!response.ok) {
+              throw new Error('Network response was not ok');
+            }
+            const result = await response.json();
+            console.log(result)
+            setCityName(result.name);
+            setWeatherStatus(result.weather[0].description);
+            setHumidity(result.main.humidity)
+            const getcityName = result.name
+            console.log(getcityName)
+          } catch (err) {
+          } finally {
+          }
+        };
+        fetchData();
+        const FiveDayForecast = async () => {
+          const appid = "16ea865e0fb96ed2bbafbef75005c594";
+          // console.log(cityname,getLatitude,"no no")
+          try {
+            const response = await fetch(`http://api.openweathermap.org/data/2.5/forecast?q=midrand&units=metric&cnt=40&appid=${appid}`);
+            if (!response.ok) {
+              throw new Error('Network response was not ok');
+            }
+            const result = await response.json();
+            console.log(result.list,"yest")
+            const forecastData = result.data.list.slice(0, 40);
+            console.log(forecastData)
+            setWeatherData(forecastData);
+            setWeatherStatus(result.weather[0].description);
+            setHumidity(result.main.humidity)
+          } catch (err) {
+          } finally {
+          }
+        };
+        FiveDayForecast();
       },
       (error) => {
         console.log(error)
@@ -83,39 +117,15 @@ const CurrentWeather = () => {
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
     );
   };
-  async function FetchCurrentData() {
-    console.log(latitude, "hi")
-    try {
-      const response = await fetch('https://api.openweathermap.org/data/2.5/weather?lat=-25.731340&lon=-25.731340&appid=16ea865e0fb96ed2bbafbef75005c594');
-      console.log(response)
-      const data = await response.json();
-      console.log(data)
-      setCityName(data.name);
-      setWeatherStatus(data.weather[0].description);
-    } catch (error) {
-      console.error(error);
-    }
-  }
-  async function FiveDayForecast() {
-    console.log(latitude, "hi")
-    try {
-      const response = await fetch('https://api.openweathermap.org/data/2.5/forecast?q=midrand&appid=16ea865e0fb96ed2bbafbef75005c594');
-      console.log(response)
-      const data = await response.json();
-      console.log(data)
-      // setCityName(data.name);
-      // setWeatherStatus(data.weather[0].description);
-    } catch (error) {
-      console.error(error);
-    }
-  }
+
+
   async function CurrentWeatherByCityName() {
     console.log(latitude, "hi")
     try {
       const response = await fetch('https://api.openweathermap.org/data/2.5/weather?q=midrand&appid=16ea865e0fb96ed2bbafbef75005c594');
-      console.log(response)
+      // console.log(response)
       const data = await response.json();
-      console.log(data.list)
+      // console.log(data.list)
       // setCityName(data.name);
       // setWeatherStatus(data.weather[0].description);
     } catch (error) {
@@ -124,8 +134,6 @@ const CurrentWeather = () => {
   }
   useEffect(() => {
     getCurrentLocation();
-    FetchCurrentData();
-    FiveDayForecast();
     CurrentWeatherByCityName();
 
   }, []);
@@ -195,12 +203,11 @@ const CurrentWeather = () => {
           <Group3 style={styles.groupIcon1} width={54} height={21} />
         </View>
         <View style={styles.top}>
-          <Text style={[styles.h29L15, styles.textTypo8]}>H:29° L:15°</Text>
           <Text style={[styles.partlyCloudy, styles.rectangle5Position]}>
             {weatherstatus}
           </Text>
           <Text style={[styles.seongnamSi, styles.textTypo8]}>{cityname}</Text>
-          <Text style={[styles.text, styles.textTypo8]}>21°</Text>
+          <Text style={[styles.text, styles.textTypo8]}>{humidity}°</Text>
         </View>
         <View style={styles.card}>
           <View style={styles.rectangle2} />
@@ -292,8 +299,9 @@ showers expected at 9`}
           </View>
           <View style={[styles.line3, styles.lineLayout]} />
           <Text style={[styles.dayForecast, styles.text20Typo]}>
-            10-DAY FORECAST
+            5-DAY FORECAST
           </Text>
+          
           <Text style={[styles.text20, styles.text20Typo]}>􀉉</Text>
         </View>
         <View style={styles.nav}>

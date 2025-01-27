@@ -1,131 +1,188 @@
 import * as React from "react";
 import { Image } from "expo-image";
-import { StyleSheet, Text, View } from "react-native";
 import Logo from "../assets/logo.svg";
 import Logo1 from "../assets/logo1.svg";
 import Battery from "../assets/battery.svg";
 import Wifi from "../assets/wifi.svg";
 import Mobilesignal from "../assets/mobile-signal.svg";
 import Group3 from "../assets/group3.svg";
+import { View, TextInput, Button, Text, FlatList, StyleSheet } from 'react-native';
 import { Color, FontFamily, FontSize, Border } from "../GlobalStyles";
 import { useState, useEffect } from 'react';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+// import MMKVStorage from "react-native-mmkv-storage";
+
+
+
 const SearchSave = () => {
+  const [city, setCity] = useState('');
+  const [weatherData, setWeatherData] = useState(null);
+  const [error, setError] = useState('');
 
 
 
+  const searchCity = async () => {
+    try {
+      const response = await axios.get(
+        `http://api.openweathermap.org/data/2.5/find?q=${city}&type=like&sort=population&cnt=10&appid=16ea865e0fb96ed2bbafbef75005c594`
+      );
+      console.log(response.data.list[0])
+      const FavCities = response.data.list[0]
+      setWeatherData(response.data.list[0]);
 
-    async function CurrentWeatherByCityName() {
-      // console.log(latitude, "hi")
-      try {
-        const response = await fetch('https://api.openweathermap.org/data/2.5/weather?q=midrand&appid=16ea865e0fb96ed2bbafbef75005c594');
-        console.log(response)
-        const data = await response.json();
-        console.log(data.list)
-        // setCityName(data.name);
-        // setWeatherStatus(data.weather[0].description);
-      } catch (error) {
-        console.error(error);
-      }
+// Save data
+const storeData = async () => {
+  try {
+    // Save a key-value pair
+    await AsyncStorage.setItem('user_name', FavCities);
+    console.log('Data saved successfully');
+  } catch (error) {
+    console.error('Error saving data', error);
+  }
+};
+
+// Retrieve data
+// const getData = async (key) => {
+//   try {
+//     const value = await AsyncStorage.getItem(key);
+//     return value ? JSON.parse(value) : null;
+//   } catch (e) {
+//     console.error('Error retrieving data', e);
+//   }
+// };
+
+// // Remove data
+// const removeData = async (key) => {
+//   try {
+//     await AsyncStorage.removeItem(key);
+//   } catch (e) {
+//     console.error('Error removing data', e);
+//   }
+// };
+
+    } catch (error) {
+      console.error(error);
     }
-    useEffect(() => {
-      CurrentWeatherByCityName();
-  
-    }, []);
+  }
+  useEffect(() => {
+    // searchCity();
+    // 
+  }, []);
   return (
-    <View style={styles.searchSave}>
-      <Logo
-        style={[styles.logoIcon, styles.logoIconLayout]}
-        width={6}
-        height={3}
+    <View style={{ padding: 20 }}>
+      <TextInput
+        value={city}
+        onChangeText={setCity}
+        placeholder="Enter city name"
+        style={{ borderBottomWidth: 1, marginBottom: 10, padding: 5 }}
       />
-      <Logo1
-        style={[styles.logoIcon1, styles.logoIconLayout]}
-        width={6}
-        height={3}
-      />
-      <Text style={styles.learnMoreAboutContainer}>
-        {`Learn more about `}
-        <Text style={styles.weatherData}>weather data</Text>
-        {` and `}
-        <Text style={styles.weatherData}>map data</Text>
-      </Text>
-      <View style={styles.list}>
-        <View style={[styles.group, styles.groupPosition]}>
-          <Image
-            // style={[styles.groupIcon, styles.groupPosition]}
-            contentFit="cover"
-            source={require("../assets/group.png")}
-          />
-          <Text style={[styles.l15, styles.l15Typo]}>L:15°</Text>
-          <Text style={[styles.h29, styles.l15Typo]}>H:29°</Text>
-          <Text style={[styles.seoul, styles.seoulTypo]}>Seoul</Text>
-          <Text style={[styles.pm, styles.pmTypo]}>PM</Text>
-          <Text style={[styles.text, styles.pmTypo]}>9:11</Text>
+      <Button title="Search" onPress={searchCity} />
+      {weatherData && (
+        <View style={{ marginTop: 20 }}>
+          <Text>City: {weatherData.name}</Text>
+          <Text>Temperature: {weatherData.main.temp}°C</Text>
+          <Text>Weather: {weatherData.weather[0].description}</Text>
         </View>
-        <Text
-          style={[styles.notAsWarm, styles.notAsWarmTypo]}
-        >{`Not as warm tomorrow, with
-a high of 26°`}</Text>
-        <Text style={[styles.text1, styles.textTypo]}>22°</Text>
-      </View>
-      <View style={[styles.list1, styles.list1Position]}>
-        <Image
-          // style={[styles.groupIcon1, styles.rectanglePosition]}
-          contentFit="cover"
-          source={require("../assets/group1.png")}
-        />
-        <Text style={[styles.l151, styles.l151Layout]}>L:15°</Text>
-        <Text style={[styles.h291, styles.l151Layout]}>H:29°</Text>
-        <Text style={[styles.partlyCloudy, styles.myLocationPosition]}>
-          Partly Cloudy
-        </Text>
-        <Text style={[styles.myLocation, styles.myLocationPosition]}>
-          My Location
-        </Text>
-        <Text style={[styles.seongnamSi, styles.myLocationPosition]}>
-          Seongnam-si
-        </Text>
-        <Text style={[styles.text2, styles.l151Position]}>21°</Text>
-      </View>
-      <View style={[styles.searchBar, styles.searchBarLayout]}>
-        <View style={[styles.rectangle, styles.rectangleBg]} />
-        <Text style={[styles.searchForA, styles.text3Typo]}>
-          Search for a city or airport
-        </Text>
-        <Text style={[styles.text3, styles.text3Typo]}>􀊫</Text>
-      </View>
-      <Text style={[styles.weather, styles.seoulTypo]}>Weather</Text>
-      <Text style={[styles.text4, styles.l15Typo]}>􀍡</Text>
-      <View style={styles.darkModetrueTypedefault}>
-        <Image
-          // style={styles.groupIcon2}
-          contentFit="cover"
-          source={require("../assets/group2.png")}
-        />
-        <View style={[styles.group1, styles.iconLayout]}>
-          <Battery
-            style={[styles.batteryIcon, styles.iconLayout]}
-            width={24}
-            height={11}
-          />
-          <Wifi
-            style={[styles.wifiIcon, styles.iconLayout]}
-            width={15}
-            height={11}
-          />
-          <Mobilesignal
-            style={[styles.mobileSignalIcon, styles.iconLayout]}
-            width={17}
-            height={11}
-          />
-        </View>
-        <Group3 style={styles.groupIcon3} width={54} height={21} />
-      </View>
-      <View style={[styles.frame, styles.groupPosition]}>
-        <View style={[styles.rectangle1, styles.rectangleBg]} />
-      </View>
-      <View style={[styles.searchSaveChild, styles.l151Position]} />
+      )}
+      {/* {error && <Text style={{ color: 'red' }}>{error}</Text>} */}
     </View>
+
+
+    //     <View style={styles.searchSave}>
+    //       <Logo
+    //         style={[styles.logoIcon, styles.logoIconLayout]}
+    //         width={6}
+    //         height={3}
+    //       />
+    //       <Logo1
+    //         style={[styles.logoIcon1, styles.logoIconLayout]}
+    //         width={6}
+    //         height={3}
+    //       />
+    //       <Text style={styles.learnMoreAboutContainer}>
+    //         {`Learn more about `}
+    //         <Text style={styles.weatherData}>weather data</Text>
+    //         {` and `}
+    //         <Text style={styles.weatherData}>map data</Text>
+    //       </Text>
+    //       <View style={styles.list}>
+    //         <View style={[styles.group, styles.groupPosition]}>
+    //           <Image
+    //             // style={[styles.groupIcon, styles.groupPosition]}
+    //             contentFit="cover"
+    //             source={require("../assets/group.png")}
+    //           />
+    //           <Text style={[styles.l15, styles.l15Typo]}>L:15°</Text>
+    //           <Text style={[styles.h29, styles.l15Typo]}>H:29°</Text>
+    //           <Text style={[styles.seoul, styles.seoulTypo]}>Seoul</Text>
+    //           <Text style={[styles.pm, styles.pmTypo]}>PM</Text>
+    //           <Text style={[styles.text, styles.pmTypo]}>9:11</Text>
+    //         </View>
+    //         <Text
+    //           style={[styles.notAsWarm, styles.notAsWarmTypo]}
+    //         >{`Not as warm tomorrow, with
+    // a high of 26°`}</Text>
+    //         <Text style={[styles.text1, styles.textTypo]}>22°</Text>
+    //       </View>
+    //       <View style={[styles.list1, styles.list1Position]}>
+    //         <Image
+    //           // style={[styles.groupIcon1, styles.rectanglePosition]}
+    //           contentFit="cover"
+    //           source={require("../assets/group1.png")}
+    //         />
+    //         <Text style={[styles.l151, styles.l151Layout]}>L:15°</Text>
+    //         <Text style={[styles.h291, styles.l151Layout]}>H:29°</Text>
+    //         <Text style={[styles.partlyCloudy, styles.myLocationPosition]}>
+    //           Partly Cloudy
+    //         </Text>
+    //         <Text style={[styles.myLocation, styles.myLocationPosition]}>
+    //           My Location
+    //         </Text>
+    //         <Text style={[styles.seongnamSi, styles.myLocationPosition]}>
+    //           Seongnam-si
+    //         </Text>
+    //         <Text style={[styles.text2, styles.l151Position]}>21°</Text>
+    //       </View>
+    //       <View style={[styles.searchBar, styles.searchBarLayout]}>
+    //         <View style={[styles.rectangle, styles.rectangleBg]} />
+    //         <Text style={[styles.searchForA, styles.text3Typo]}>
+    //           Search for a city or airport
+    //         </Text>
+    //         <Text style={[styles.text3, styles.text3Typo]}>􀊫</Text>
+    //       </View>
+    //       <Text style={[styles.weather, styles.seoulTypo]}>Weather</Text>
+    //       <Text style={[styles.text4, styles.l15Typo]}>􀍡</Text>
+    //       <View style={styles.darkModetrueTypedefault}>
+    //         <Image
+    //           // style={styles.groupIcon2}
+    //           contentFit="cover"
+    //           source={require("../assets/group2.png")}
+    //         />
+    //         <View style={[styles.group1, styles.iconLayout]}>
+    //           <Battery
+    //             style={[styles.batteryIcon, styles.iconLayout]}
+    //             width={24}
+    //             height={11}
+    //           />
+    //           <Wifi
+    //             style={[styles.wifiIcon, styles.iconLayout]}
+    //             width={15}
+    //             height={11}
+    //           />
+    //           <Mobilesignal
+    //             style={[styles.mobileSignalIcon, styles.iconLayout]}
+    //             width={17}
+    //             height={11}
+    //           />
+    //         </View>
+    //         <Group3 style={styles.groupIcon3} width={54} height={21} />
+    //       </View>
+    //       <View style={[styles.frame, styles.groupPosition]}>
+    //         <View style={[styles.rectangle1, styles.rectangleBg]} />
+    //       </View>
+    //       <View style={[styles.searchSaveChild, styles.l151Position]} />
+    //     </View>
   );
 };
 
