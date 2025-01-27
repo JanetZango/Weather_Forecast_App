@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ScrollView, StyleSheet, View, Text } from "react-native";
+import { ScrollView, StyleSheet, View, PermissionsAndroid, Platform, Text } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Image } from "expo-image";
 import Battery from "../assets/battery.svg";
@@ -10,8 +10,126 @@ import Frame from "../assets/frame.svg";
 import Vector from "../assets/vector.svg";
 import Ellipse from "../assets/ellipse.svg";
 import { Color, FontFamily, FontSize, Border } from "../GlobalStyles";
+import Geolocation from 'react-native-geolocation-service';
+import { request, PERMISSIONS, RESULTS } from 'react-native-permissions';
+import { useState, useEffect } from 'react';
+
+
+interface GeoPosition {
+  coords: {
+    latitude: number;
+    longitude: number;
+  };
+  timestamp: number;
+}
 
 const CurrentWeather = () => {
+  const [location, setLocation] = useState<GeoPosition | null>(null);
+  const [longitude, setLongitude] = useState<string | number>("");
+  const [latitude, setLatitude] =useState<string | number>("");
+  const [cityname, setCityName] = useState('');
+  const [weatherstatus, setWeatherStatus] = useState('');
+
+
+
+  // const requestLocationPermission = async () => {
+  //   try {
+  //     if (Platform.OS === 'android') {
+  //       const granted = await PermissionsAndroid.request(
+  //         PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+  //       );
+  //       if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+  //         console.log('Location permission granted');
+  //         return true;
+  //       } else {
+  //         console.log('Location permission denied');
+  //         return false;
+  //       }
+  //     } else {
+  //       const result = await request(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE);
+  //       if (result === RESULTS.GRANTED) {
+  //         console.log('Location permission granted');
+  //         return true;
+  //       } else {
+  //         console.log('Location permission denied');
+  //         return false;
+  //       }
+  //     }
+  //   } catch (err) {
+  //     console.warn(err);
+  //     return false;
+  //   }
+  // };
+  const getCurrentLocation = () => {
+    Geolocation.getCurrentPosition(
+      (position) => {
+        setLocation(position);
+        console.log(position.coords.latitude);
+        console.log(position.coords.longitude);
+        const latitute = position.coords.longitude
+        console.log(latitute)
+
+        setLatitude(latitute);
+        setLongitude(position.coords.longitude);
+
+        console.log(latitude)
+     
+      },
+      (error) => {
+        console.log(error)
+        // Alert.alert('Error', error.message);
+        // console.error(error);
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+    );
+  };
+  async function FetchCurrentData() {
+    console.log(latitude, "hi")
+    try {
+      const response = await fetch('https://api.openweathermap.org/data/2.5/weather?lat=-25.731340&lon=-25.731340&appid=16ea865e0fb96ed2bbafbef75005c594');
+      console.log(response)
+      const data = await response.json();
+      console.log(data)
+      setCityName(data.name);
+      setWeatherStatus(data.weather[0].description);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+  async function FiveDayForecast() {
+    console.log(latitude, "hi")
+    try {
+      const response = await fetch('https://api.openweathermap.org/data/2.5/forecast?q=midrand&appid=16ea865e0fb96ed2bbafbef75005c594');
+      console.log(response)
+      const data = await response.json();
+      console.log(data)
+      // setCityName(data.name);
+      // setWeatherStatus(data.weather[0].description);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+  async function CurrentWeatherByCityName() {
+    console.log(latitude, "hi")
+    try {
+      const response = await fetch('https://api.openweathermap.org/data/2.5/weather?q=midrand&appid=16ea865e0fb96ed2bbafbef75005c594');
+      console.log(response)
+      const data = await response.json();
+      console.log(data.list)
+      // setCityName(data.name);
+      // setWeatherStatus(data.weather[0].description);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+  useEffect(() => {
+    getCurrentLocation();
+    FetchCurrentData();
+    FiveDayForecast();
+    CurrentWeatherByCityName();
+
+  }, []);
+
   return (
     <LinearGradient
       style={styles.currentWeather}
@@ -79,9 +197,9 @@ const CurrentWeather = () => {
         <View style={styles.top}>
           <Text style={[styles.h29L15, styles.textTypo8]}>H:29° L:15°</Text>
           <Text style={[styles.partlyCloudy, styles.rectangle5Position]}>
-            Partly Cloudy
+            {weatherstatus}
           </Text>
-          <Text style={[styles.seongnamSi, styles.textTypo8]}>Seongnam-si</Text>
+          <Text style={[styles.seongnamSi, styles.textTypo8]}>{cityname}</Text>
           <Text style={[styles.text, styles.textTypo8]}>21°</Text>
         </View>
         <View style={styles.card}>
@@ -102,14 +220,14 @@ const CurrentWeather = () => {
           <Text style={[styles.pm1, styles.am1Typo]}>10PM</Text>
           <Text style={[styles.now, styles.amTypo]}>Now</Text>
           <View style={[styles.line, styles.lineBorder]} />
-          <Text
+          {/* <Text
             style={[styles.cloudyConditionsFromContainer, styles.textTypo6]}
           >
             Cloudy conditions from 1AM-9AM
             {`, with
 showers expected at 9`}
             AM.
-          </Text>
+          </Text> */}
         </View>
         <View style={styles.card1}>
           <View style={styles.rectangle2} />

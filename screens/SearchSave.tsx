@@ -8,8 +8,29 @@ import Wifi from "../assets/wifi.svg";
 import Mobilesignal from "../assets/mobile-signal.svg";
 import Group3 from "../assets/group3.svg";
 import { Color, FontFamily, FontSize, Border } from "../GlobalStyles";
-
+import { useState, useEffect } from 'react';
 const SearchSave = () => {
+
+
+
+
+    async function CurrentWeatherByCityName() {
+      // console.log(latitude, "hi")
+      try {
+        const response = await fetch('https://api.openweathermap.org/data/2.5/weather?q=midrand&appid=16ea865e0fb96ed2bbafbef75005c594');
+        console.log(response)
+        const data = await response.json();
+        console.log(data.list)
+        // setCityName(data.name);
+        // setWeatherStatus(data.weather[0].description);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+    useEffect(() => {
+      CurrentWeatherByCityName();
+  
+    }, []);
   return (
     <View style={styles.searchSave}>
       <Logo
@@ -31,7 +52,7 @@ const SearchSave = () => {
       <View style={styles.list}>
         <View style={[styles.group, styles.groupPosition]}>
           <Image
-            style={[styles.groupIcon, styles.groupPosition]}
+            // style={[styles.groupIcon, styles.groupPosition]}
             contentFit="cover"
             source={require("../assets/group.png")}
           />
@@ -49,7 +70,7 @@ a high of 26°`}</Text>
       </View>
       <View style={[styles.list1, styles.list1Position]}>
         <Image
-          style={[styles.groupIcon1, styles.rectanglePosition]}
+          // style={[styles.groupIcon1, styles.rectanglePosition]}
           contentFit="cover"
           source={require("../assets/group1.png")}
         />
@@ -77,7 +98,7 @@ a high of 26°`}</Text>
       <Text style={[styles.text4, styles.l15Typo]}>􀍡</Text>
       <View style={styles.darkModetrueTypedefault}>
         <Image
-          style={styles.groupIcon2}
+          // style={styles.groupIcon2}
           contentFit="cover"
           source={require("../assets/group2.png")}
         />
@@ -221,7 +242,7 @@ const styles = StyleSheet.create({
     position: "absolute",
   },
   weatherData: {
-    textDecoration: "underline",
+    // textDecoration: "underline",
   },
   learnMoreAboutContainer: {
     marginTop: 166,
