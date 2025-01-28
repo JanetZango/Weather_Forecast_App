@@ -12,7 +12,7 @@ const App = () => {
   const [hideSplashScreen, setHideSplashScreen] = React.useState(true);
 
 
-  
+
   return (
     <>
       <NavigationContainer>
@@ -28,9 +28,6 @@ const App = () => {
               component={CurrentWeather}
               options={{ headerShown: false }}
             />
-
-
-
 
 
           </Stack.Navigator>

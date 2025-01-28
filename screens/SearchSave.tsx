@@ -6,21 +6,97 @@ import Battery from "../assets/battery.svg";
 import Wifi from "../assets/wifi.svg";
 import Mobilesignal from "../assets/mobile-signal.svg";
 import Group3 from "../assets/group3.svg";
-import { View, TextInput, Button, Text, FlatList, StyleSheet } from 'react-native';
+import { View, TextInput, Button, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { Color, FontFamily, FontSize, Border } from "../GlobalStyles";
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Geolocation from 'react-native-geolocation-service';
+import { useNavigation } from '@react-navigation/native';
+import LinearGradient from 'react-native-linear-gradient';
+
 // import MMKVStorage from "react-native-mmkv-storage";
 
+
+interface GeoPosition {
+  coords: {
+    latitude: number;
+    longitude: number;
+  };
+  timestamp: number;
+}
 
 
 const SearchSave = () => {
   const [city, setCity] = useState('');
-  const [weatherData, setWeatherData] = useState(null);
   const [error, setError] = useState('');
+  const [location, setLocation] = useState<GeoPosition | null>(null);
+  const [longitude, setLongitude] = useState<string | number>("");
+  const [latitude, setLatitude] = useState<string | number>("");
+  const [cityname, setCityName] = useState('');
+  const [weatherstatus, setWeatherStatus] = useState('');
+  const [humidity, setHumidity] = useState('');
+  const [weatherdata, setWeatherData] = useState('');
+  const [searchedname, setSearchedName] = useState('');
+  const [searchweatherdesription, setSearchedWetherDescription] = useState('');
+  const [searchedhumidity, setSearchedHumidity] = useState('');
+  const [refreshdata, setrefreshData] = useState(null);
 
-
+  const getCurrentLocation = () => {
+    Geolocation.getCurrentPosition(
+      (position) => {
+        console.log(position)
+        setLocation(position);
+        const getLongitude = position.coords.longitude
+        const getLatitude = position.coords.latitude
+        const fetchData = async () => {
+          const appid = "16ea865e0fb96ed2bbafbef75005c594";
+          try {
+            const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${getLatitude}&lon=${getLongitude}&appid=${appid}`);
+            if (!response.ok) {
+              throw new Error('Network response was not ok');
+            }
+            const result = await response.json();
+            console.log(result)
+            setCityName(result.name);
+            setWeatherStatus(result.weather[0].description);
+            setHumidity(result.main.humidity)
+            const getcityName = result.name
+            console.log(getcityName)
+          } catch (err) {
+          } finally {
+          }
+        };
+        fetchData();
+        const FiveDayForecast = async () => {
+          const appid = "16ea865e0fb96ed2bbafbef75005c594";
+          // console.log(cityname,getLatitude,"no no")
+          try {
+            const response = await fetch(`http://api.openweathermap.org/data/2.5/forecast?q=midrand&units=metric&cnt=40&appid=${appid}`);
+            if (!response.ok) {
+              throw new Error('Network response was not ok');
+            }
+            const result = await response.json();
+            console.log(result.list, "yest")
+            const forecastData = result.data.list.slice(0, 40);
+            console.log(forecastData)
+            setWeatherData(forecastData);
+            setWeatherStatus(result.weather[0].description);
+            setHumidity(result.main.humidity)
+          } catch (err) {
+          } finally {
+          }
+        };
+        FiveDayForecast();
+      },
+      (error) => {
+        console.log(error)
+        // Alert.alert('Error', error.message);
+        // console.error(error);
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+    );
+  };
 
   const searchCity = async () => {
     try {
@@ -28,165 +104,234 @@ const SearchSave = () => {
         `http://api.openweathermap.org/data/2.5/find?q=${city}&type=like&sort=population&cnt=10&appid=16ea865e0fb96ed2bbafbef75005c594`
       );
       console.log(response.data.list[0])
-      const FavCities = response.data.list[0]
+      const FavouritCities = response.data.list[0]
       setWeatherData(response.data.list[0]);
+      try {
+        await AsyncStorage.setItem('FavouritCities', JSON.stringify(FavouritCities));
+        console.log('Data saved');
+      } catch (error) {
+        console.error('Error saving data:', error);
+      }
 
-// Save data
-const storeData = async () => {
-  try {
-    // Save a key-value pair
-    await AsyncStorage.setItem('user_name', FavCities);
-    console.log('Data saved successfully');
-  } catch (error) {
-    console.error('Error saving data', error);
-  }
-};
-
-// Retrieve data
-// const getData = async (key) => {
-//   try {
-//     const value = await AsyncStorage.getItem(key);
-//     return value ? JSON.parse(value) : null;
-//   } catch (e) {
-//     console.error('Error retrieving data', e);
-//   }
-// };
-
-// // Remove data
-// const removeData = async (key) => {
-//   try {
-//     await AsyncStorage.removeItem(key);
-//   } catch (e) {
-//     console.error('Error removing data', e);
-//   }
-// };
+      // const removeData = async (key) => {
+      //   try {
+      //     await AsyncStorage.removeItem(key);
+      //   } catch (e) {
+      //     console.error('Error removing data', e);
+      //   }
+      // };
 
     } catch (error) {
       console.error(error);
     }
   }
+  const getData = async () => {
+    try {
+      const value = await AsyncStorage.getItem('FavouritCities');
+      if (value !== null) {
+        const user = value != null ? JSON.parse(value) : null;
+        // Data is found
+        console.log('Retrieved value:', user);
+        const searchedname = user.name
+        console.log(searchedname)
+        const searchedhumidity = user.main.humidity
+        const description = user.weather[0].description
+        setSearchedName(searchedname)
+        setSearchedHumidity(searchedhumidity)
+        // searchweatherdesription(description)
+      } else {
+        // No value associated with the key
+        console.log('No value found for the key');
+      }
+    } catch (error) {
+      console.error('Error reading value:', error);
+    }
+  };
+
+
   useEffect(() => {
+    getCurrentLocation();
+    getData();
+
     // searchCity();
     // 
   }, []);
   return (
-    <View style={{ padding: 20 }}>
-      <TextInput
-        value={city}
-        onChangeText={setCity}
-        placeholder="Enter city name"
-        style={{ borderBottomWidth: 1, marginBottom: 10, padding: 5 }}
-      />
-      <Button title="Search" onPress={searchCity} />
-      {weatherData && (
-        <View style={{ marginTop: 20 }}>
-          <Text>City: {weatherData.name}</Text>
-          <Text>Temperature: {weatherData.main.temp}°C</Text>
-          <Text>Weather: {weatherData.weather[0].description}</Text>
+    <View style={{ padding: 20, backgroundColor: '#4A309F', flex: 1 }}>
+      <View>
+        <Text style={styles.textFont}>Weather</Text>
+        {/* <Icon name="search" size={20} color="#000" style={styles.icon} /> */}
+        <TextInput
+          value={city}
+          onChangeText={setCity}
+          placeholder="Enter city name"
+          style={{color: 'lightgray'}}
+        />
+        <View style={styles.card}>
+          <Text style={styles.MylocationText}>{searchedname}</Text>
+          {/* <Image source={{ uri: iconUrl }} style={styles.icon} /> */}
+          <Text style={styles.location}>{cityname}</Text>
+          <Text style={styles.location}>{weatherstatus}</Text>
+          <Text style={styles.degree}>{searchedhumidity}°</Text>
         </View>
-      )}
-      {/* {error && <Text style={{ color: 'red' }}>{error}</Text>} */}
+        <View style={styles.card}>
+          <Text style={styles.MylocationText}>My Location</Text>
+          {/* <Image source={{ uri: iconUrl }} style={styles.icon} /> */}
+          <Text style={styles.location}>{cityname}</Text>
+          <Text style={styles.location}>{weatherstatus}</Text>
+          <Text style={styles.degree}>{humidity}°</Text>
+        </View>
+      </View>
+
+
+
     </View>
 
 
-    //     <View style={styles.searchSave}>
-    //       <Logo
-    //         style={[styles.logoIcon, styles.logoIconLayout]}
-    //         width={6}
-    //         height={3}
-    //       />
-    //       <Logo1
-    //         style={[styles.logoIcon1, styles.logoIconLayout]}
-    //         width={6}
-    //         height={3}
-    //       />
-    //       <Text style={styles.learnMoreAboutContainer}>
-    //         {`Learn more about `}
-    //         <Text style={styles.weatherData}>weather data</Text>
-    //         {` and `}
-    //         <Text style={styles.weatherData}>map data</Text>
-    //       </Text>
-    //       <View style={styles.list}>
-    //         <View style={[styles.group, styles.groupPosition]}>
-    //           <Image
-    //             // style={[styles.groupIcon, styles.groupPosition]}
-    //             contentFit="cover"
-    //             source={require("../assets/group.png")}
-    //           />
-    //           <Text style={[styles.l15, styles.l15Typo]}>L:15°</Text>
-    //           <Text style={[styles.h29, styles.l15Typo]}>H:29°</Text>
-    //           <Text style={[styles.seoul, styles.seoulTypo]}>Seoul</Text>
-    //           <Text style={[styles.pm, styles.pmTypo]}>PM</Text>
-    //           <Text style={[styles.text, styles.pmTypo]}>9:11</Text>
-    //         </View>
-    //         <Text
-    //           style={[styles.notAsWarm, styles.notAsWarmTypo]}
-    //         >{`Not as warm tomorrow, with
-    // a high of 26°`}</Text>
-    //         <Text style={[styles.text1, styles.textTypo]}>22°</Text>
-    //       </View>
-    //       <View style={[styles.list1, styles.list1Position]}>
-    //         <Image
-    //           // style={[styles.groupIcon1, styles.rectanglePosition]}
-    //           contentFit="cover"
-    //           source={require("../assets/group1.png")}
-    //         />
-    //         <Text style={[styles.l151, styles.l151Layout]}>L:15°</Text>
-    //         <Text style={[styles.h291, styles.l151Layout]}>H:29°</Text>
-    //         <Text style={[styles.partlyCloudy, styles.myLocationPosition]}>
-    //           Partly Cloudy
-    //         </Text>
-    //         <Text style={[styles.myLocation, styles.myLocationPosition]}>
-    //           My Location
-    //         </Text>
-    //         <Text style={[styles.seongnamSi, styles.myLocationPosition]}>
-    //           Seongnam-si
-    //         </Text>
-    //         <Text style={[styles.text2, styles.l151Position]}>21°</Text>
-    //       </View>
-    //       <View style={[styles.searchBar, styles.searchBarLayout]}>
-    //         <View style={[styles.rectangle, styles.rectangleBg]} />
-    //         <Text style={[styles.searchForA, styles.text3Typo]}>
-    //           Search for a city or airport
-    //         </Text>
-    //         <Text style={[styles.text3, styles.text3Typo]}>􀊫</Text>
-    //       </View>
-    //       <Text style={[styles.weather, styles.seoulTypo]}>Weather</Text>
-    //       <Text style={[styles.text4, styles.l15Typo]}>􀍡</Text>
-    //       <View style={styles.darkModetrueTypedefault}>
-    //         <Image
+    // <View style={[styles.searchSave]}  >
+    //   <Logo
+    //     style={[styles.logoIcon, styles.logoIconLayout]}
+    //     width={6}
+    //     height={3}
+    //   />
+    //   <Logo1
+    //     style={[styles.logoIcon1, styles.logoIconLayout]}
+    //     width={6}
+    //     height={3}
+    //   />
+    //   <Text style={styles.learnMoreAboutContainer}>
+    //     {`Learn more about `}
+    //     <Text style={styles.weatherData}>weather data</Text>
+    //     {` and `}
+    //     <Text style={styles.weatherData}>map data</Text>
+    //   </Text>
+    //   <View style={[styles.list1, styles.list1Position,{backgroundColor: '#00094B', flex: 1}]}>
+    //     <Image
+    //       // style={[styles.groupIcon1, styles.rectanglePosition]}
+    //       contentFit="cover"
+    //       source={require("../assets/group1.png")}
+    //     />
+    //     {/* <Text style={[styles.l151, styles.l151Layout]}>L:15°</Text>
+    //     <Text style={[styles.h291, styles.l151Layout]}>H:29°</Text> */}
+    //     <Text style={[styles.partlyCloudy, styles.myLocationPosition]}>
+    //       {weatherstatus}
+    //     </Text>
+    //     <Text style={[styles.myLocation, styles.myLocationPosition]}>
+    //       My Location
+    //     </Text>
+    //     <Text style={[styles.seongnamSi, styles.myLocationPosition]}>
+    //      {cityname}
+    //     </Text>
+    //     <Text style={[styles.text2, styles.l151Position]}>{humidity}°</Text>
+    //   </View>
+
+    //   <View style={[styles.searchBar, styles.searchBarLayout]}>
+    //     <View style={[styles.rectangle, styles.rectangleBg]} />
+
+    //     <TextInput style={[styles.searchForA, styles.text3Typo]} placeholder="Enter city name" onChangeText={setCity}
+    //      />
+    //     <Text style={[styles.text3, styles.text3Typo]}>􀊫</Text>
+
+    //   </View>
+    //   <TouchableOpacity >
+    //       <Text>Search</Text>
+    //     </TouchableOpacity>
+    //   <Text style={[styles.weather, styles.seoulTypo]}>Weather</Text>
+
+    //   <Text style={[styles.text4, styles.l15Typo]}>􀍡</Text>
+    //   <View style={styles.darkModetrueTypedefault}>
+    //     {/* <Image
     //           // style={styles.groupIcon2}
     //           contentFit="cover"
     //           source={require("../assets/group2.png")}
-    //         />
-    //         <View style={[styles.group1, styles.iconLayout]}>
-    //           <Battery
-    //             style={[styles.batteryIcon, styles.iconLayout]}
-    //             width={24}
-    //             height={11}
-    //           />
-    //           <Wifi
-    //             style={[styles.wifiIcon, styles.iconLayout]}
-    //             width={15}
-    //             height={11}
-    //           />
-    //           <Mobilesignal
-    //             style={[styles.mobileSignalIcon, styles.iconLayout]}
-    //             width={17}
-    //             height={11}
-    //           />
-    //         </View>
-    //         <Group3 style={styles.groupIcon3} width={54} height={21} />
-    //       </View>
-    //       <View style={[styles.frame, styles.groupPosition]}>
-    //         <View style={[styles.rectangle1, styles.rectangleBg]} />
-    //       </View>
-    //       <View style={[styles.searchSaveChild, styles.l151Position]} />
+    //         /> */}
+    //     <View style={[styles.group1, styles.iconLayout]}>
+    //       <Battery
+    //         style={[styles.batteryIcon, styles.iconLayout]}
+    //         width={24}
+    //         height={11}
+    //       />
+    //       <Wifi
+    //         style={[styles.wifiIcon, styles.iconLayout]}
+    //         width={15}
+    //         height={11}
+    //       />
+    //       <Mobilesignal
+    //         style={[styles.mobileSignalIcon, styles.iconLayout]}
+    //         width={17}
+    //         height={11}
+    //       />
     //     </View>
+    //     <Button title="Search" onPress={searchCity} />
+    //     <Group3 style={styles.groupIcon3} width={54} height={21} />
+    //   </View>
+    //   <View style={[styles.frame, styles.groupPosition]}>
+    //     <View style={[styles.rectangle1, styles.rectangleBg]} />
+    //   </View>
+    //   <View style={[styles.searchSaveChild, styles.l151Position]} />
+    // </View>
   );
 };
 
 const styles = StyleSheet.create({
+  clearButton: {
+    backgroundColor: 'transparent', // No background
+    // borderWidth: 0, // No border
+    // padding: 10,
+  },
+  text: {
+    color: 'blue', // Button text color
+    fontSize: 16,
+  },
+
+  gradient: {
+    flex: 1, // Ensure the gradient takes up the whole screen
+  },
+  MylocationText: {
+    color: "#fff",
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  card: {
+    backgroundColor: '#7843A0', // Background color of the card
+    borderRadius: 15,
+    padding: 20,
+    // alignItems: 'center',
+    // justifyContent: 'center',
+    width: 320,
+    height: 120,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 10,
+    marginTop: 50
+  },
+  icon: {
+    width: 60,
+    height: 60,
+    marginBottom: 15,
+  },
+  location: {
+    fontSize: 10,
+    // fontWeight: 'bold',
+    color: '#fff',
+  },
+  degree: {
+    fontSize: 32,
+    color: '#fff',
+  },
+
+  searchbar: {
+    borderBottomWidth: 1,
+    marginBottom: 10,
+    padding: 5,
+    backgroundColor: '#000'
+  },
+  textFont: {
+    color: "#fff",
+    fontSize: 40
+  },
   logoIconLayout: {
     maxWidth: "100%",
     overflow: "hidden",
@@ -363,10 +508,10 @@ const styles = StyleSheet.create({
     width: "6.58%",
     left: "13.73%",
   },
-  text: {
-    width: "8.06%",
-    left: "4.79%",
-  },
+  // text: {
+  //   width: "8.06%",
+  //   left: "4.79%",
+  // },
   group: {
     marginTop: -58.5,
     right: "0%",
