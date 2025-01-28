@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ScrollView, StyleSheet, View, PermissionsAndroid, Platform, Text } from "react-native";
+import { ScrollView, StyleSheet, View, PermissionsAndroid, Platform, Text, FlatList } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Image } from "expo-image";
 import Battery from "../assets/battery.svg";
@@ -13,6 +13,9 @@ import { Color, FontFamily, FontSize, Border } from "../GlobalStyles";
 import Geolocation from 'react-native-geolocation-service';
 import { request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 import { useState, useEffect } from 'react';
+import { FAB } from 'react-native-elements';
+import axios from 'axios';
+
 
 
 interface GeoPosition {
@@ -22,15 +25,26 @@ interface GeoPosition {
   };
   timestamp: number;
 }
+interface DataType {
+  date: string;
+  data: unknown;
+}
+type Props = {
+  navigation: any;
+};
 
-const CurrentWeather = () => {
+
+
+const CurrentWeather  = ({ navigation }: any) =>{
   const [location, setLocation] = useState<GeoPosition | null>(null);
   const [longitude, setLongitude] = useState<string | number>("");
-  const [latitude, setLatitude] =useState<string | number>("");
+  const [latitude, setLatitude] = useState<string | number>("");
   const [cityname, setCityName] = useState('');
   const [weatherstatus, setWeatherStatus] = useState('');
-  const [humidity,setHumidity] = useState('');
-  const [weatherdata,setWeatherData] = useState('');
+  const [humidity, setHumidity] = useState('');
+  const [weatherdata, setWeatherData] = useState('');
+  const [forecast, setForecast] = useState<DataType[]>([]);
+  const [error, setError] = useState(null);
 
 
 
@@ -92,17 +106,36 @@ const CurrentWeather = () => {
           const appid = "16ea865e0fb96ed2bbafbef75005c594";
           // console.log(cityname,getLatitude,"no no")
           try {
-            const response = await fetch(`http://api.openweathermap.org/data/2.5/forecast?q=midrand&units=metric&cnt=40&appid=${appid}`);
-            if (!response.ok) {
-              throw new Error('Network response was not ok');
-            }
-            const result = await response.json();
-            console.log(result.list,"yest")
-            const forecastData = result.data.list.slice(0, 40);
-            console.log(forecastData)
-            setWeatherData(forecastData);
-            setWeatherStatus(result.weather[0].description);
-            setHumidity(result.main.humidity)
+            const response = await axios.get(`https://api.openweathermap.org/data/2.5/forecast?q=midrand&appid=${appid}&units=metric`);
+            // if (!response.ok) {
+            //   throw new Error('Network response was not ok');
+            // }
+            // const result = await response.json();
+            // console.log(result.list,"yest")
+            // const forecastData = result.data.list.slice(0, 40);
+            // console.log(forecastData)
+            // setWeatherData(forecastData);
+            // setWeatherStatus(result.weather[0].description);
+            // setHumidity(result.main.humidity)
+            const groupedData = response.data.list.reduce((acc: any, item: any) => {
+              const date = item.dt_txt.split(' ')[0]; // Extract the date
+              console.log(date)
+              // const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+              // console.log(days)
+              // // const date = new Date(timestamp * 1000);
+              // console.log(days[date.getDay()])
+              // return days[date.getDay()];
+              if (!acc[date]) acc[date] = [];
+              acc[date].push(item);
+              return acc;
+              console.log(acc)
+            }, {});
+            const groupedArray = Object.entries(groupedData).map(([date, data]) => ({
+              date,
+              data,
+            }));
+            console.log(groupedArray)
+            setForecast(groupedArray);
           } catch (err) {
           } finally {
           }
@@ -149,13 +182,31 @@ const CurrentWeather = () => {
         showsVerticalScrollIndicator={true}
         showsHorizontalScrollIndicator={true}
         contentContainerStyle={styles.currentWeatherScrollViewContent}
+
+
       >
+
+
         <View style={[styles.img, styles.imgPosition]}>
+        <FAB
+                icon={{ name: 'search', color: 'white' }}
+                color="#6200ee"
+                placement="right"
+                style={styles.fab}
+                onPress={() => navigation.navigate("SearchSave")}
+              />
           <LinearGradient
             style={[styles.rectangle, styles.imgPosition]}
             locations={[0, 1]}
             colors={["#101623", "#2a3040"]}
           />
+               <FAB
+                icon={{ name: 'search', color: 'white' }}
+                color="#6200ee"
+                placement="right"
+                style={styles.fab}
+                onPress={() => navigation.navigate("SearchSave")}
+              />
           <Image
             style={[styles.imageIcon, styles.imageIconPosition]}
             contentFit="cover"
@@ -177,6 +228,13 @@ const CurrentWeather = () => {
             ]}
           />
         </View>
+        <FAB
+                icon={{ name: 'search', color: 'white' }}
+                color="#6200ee"
+                placement="right"
+                style={styles.fab}
+                onPress={() => navigation.navigate("SearchSave")}
+              />
         <View style={styles.darkModetrueTypedefault}>
           <Image
             style={styles.groupIcon}
@@ -200,8 +258,16 @@ const CurrentWeather = () => {
               height={11}
             />
           </View>
+          <FAB
+                icon={{ name: 'search', color: 'white' }}
+                color="#6200ee"
+                placement="right"
+                style={styles.fab}
+                onPress={() => navigation.navigate("SearchSave")}
+              />
           <Group3 style={styles.groupIcon1} width={54} height={21} />
         </View>
+   
         <View style={styles.top}>
           <Text style={[styles.partlyCloudy, styles.rectangle5Position]}>
             {weatherstatus}
@@ -209,33 +275,39 @@ const CurrentWeather = () => {
           <Text style={[styles.seongnamSi, styles.textTypo8]}>{cityname}</Text>
           <Text style={[styles.text, styles.textTypo8]}>{humidity}°</Text>
         </View>
-        <View style={styles.card}>
-          <View style={styles.rectangle2} />
-          <Text style={[styles.text1, styles.textTypo6]}>19°</Text>
-          <Text style={[styles.text2, styles.textTypo6]}>19°</Text>
-          <Text style={[styles.text3, styles.textTypo6]}>19°</Text>
-          <Text style={[styles.text4, styles.textTypo6]}>21°</Text>
-          <Text style={[styles.text5, styles.textTypo6]}>21°</Text>
-          <Text style={[styles.text6, styles.textTypo5]}>􀇗</Text>
-          <Text style={[styles.text7, styles.textTypo4]}>􀇓</Text>
-          <Text style={[styles.text8, styles.textTypo5]}>􀇉</Text>
-          <Text style={[styles.text9, styles.textTypo4]}>􀇅</Text>
-          <Text style={[styles.text10, styles.textTypo5]}>􀇛</Text>
-          <Text style={[styles.am, styles.amTypo]}>1aM</Text>
-          <Text style={[styles.am1, styles.am1Typo]}>12aM</Text>
-          <Text style={[styles.pm, styles.amTypo]}>11PM</Text>
-          <Text style={[styles.pm1, styles.am1Typo]}>10PM</Text>
-          <Text style={[styles.now, styles.amTypo]}>Now</Text>
-          <View style={[styles.line, styles.lineBorder]} />
-          {/* <Text
-            style={[styles.cloudyConditionsFromContainer, styles.textTypo6]}
-          >
-            Cloudy conditions from 1AM-9AM
-            {`, with
-showers expected at 9`}
-            AM.
-          </Text> */}
-        </View>
+        {/* <FAB
+                icon={{ name: 'search', color: 'white' }}
+                color="#6200ee"
+                placement="right"
+                style={styles.fab}
+                onPress={() => navigation.navigate("SearchSave")}
+              /> */}
+
+        <FlatList
+          data={forecast}
+          keyExtractor={(item) => item.date}
+          renderItem={({ item }) => (
+            <View style={styles.card}>
+              <Text style={styles.date}>{item.date}</Text>
+              {item.data.map((entry: any, index: any) => (
+                <Text key={index} style={styles.info}>
+                  {entry.dt_txt.split(' ')[0]}: {entry.main.temp}°C,{' '}
+                  {entry.weather[0].description}
+                </Text>
+              ))}
+           
+            </View>
+
+          )}
+        />   
+          {/* <FAB
+        icon={{ name: 'search', color: 'white' }}
+        color="#6200ee"
+        placement="right"
+        style={styles.fab}
+        onPress={() => navigation.navigate("SearchSave")}
+      /> */}
+
         <View style={styles.card1}>
           <View style={styles.rectangle2} />
           <View style={styles.frame}>
@@ -260,6 +332,13 @@ showers expected at 9`}
               height={25}
             />
           </View>
+          {/* <FAB
+                icon={{ name: 'search', color: 'white' }}
+                color="#6200ee"
+                placement="right"
+                style={styles.fab}
+                onPress={() => navigation.navigate("SearchSave")}
+              /> */}
           <View style={[styles.frame2, styles.framePosition]}>
             <View style={[styles.frame3, styles.frameIconPosition]} />
             <View style={[styles.group1, styles.lineLayout]}>
@@ -282,6 +361,13 @@ showers expected at 9`}
                 width={25}
                 height={25}
               />
+                   <FAB
+                icon={{ name: 'search', color: 'white' }}
+                color="#6200ee"
+                placement="right"
+                style={styles.fab}
+                onPress={() => navigation.navigate("SearchSave")}
+              />
               <Text style={[styles.text16, styles.textTypo3]}>60%</Text>
             </View>
           </View>
@@ -301,7 +387,7 @@ showers expected at 9`}
           <Text style={[styles.dayForecast, styles.text20Typo]}>
             5-DAY FORECAST
           </Text>
-          
+
           <Text style={[styles.text20, styles.text20Typo]}>􀉉</Text>
         </View>
         <View style={styles.nav}>
@@ -319,12 +405,58 @@ showers expected at 9`}
           <Text style={[styles.text23, styles.textTypo]}>􀙊</Text>
           <View style={[styles.line4, styles.line4Position]} />
         </View>
+        <View style={styles.container}>
+
+        </View>
+        <View style={styles.container}>
+          {/* Your other UI components go here */}
+
+
+        </View>
       </ScrollView>
+
     </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
+  fab: {
+    position: 'absolute',
+    top: 10, // Adjust the top value to place it as needed
+    right: 20, // Adjust the right value to position it horizontally
+  },
+  container: {
+    flex: 1,
+    padding: 16,
+    backgroundColor: '#f5f5f5',
+  },
+  error: {
+    fontSize: 18,
+    color: 'red',
+    textAlign: 'center',
+  },
+  card: {
+    backgroundColor: '#fff',
+    marginVertical: 8,
+    padding: 16,
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+    color: '#fff'
+  },
+  date: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    color: '#fff'
+  },
+  info: {
+    fontSize: 14,
+    color: '#fff',
+  },
+
   currentWeatherScrollViewContent: {
     flexDirection: "column",
     alignItems: "center",

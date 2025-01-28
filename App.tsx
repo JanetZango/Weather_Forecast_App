@@ -8,7 +8,12 @@ import SearchSave from "./screens/SearchSave";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { View, Text, Pressable, TouchableOpacity } from "react-native";
 
-const App = () => {
+
+
+
+
+
+const  App = () => {
   const [hideSplashScreen, setHideSplashScreen] = React.useState(true);
 
 
@@ -19,15 +24,16 @@ const App = () => {
         {hideSplashScreen ? (
           <Stack.Navigator screenOptions={{ headerShown: false }}>
             <Stack.Screen
-              name="SearchSave"
-              component={SearchSave}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
               name="CurrentWeather"
               component={CurrentWeather}
               options={{ headerShown: false }}
             />
+            <Stack.Screen
+              name="SearchSave"
+              component={SearchSave}
+              options={{ headerShown: false }}
+            />
+
 
 
           </Stack.Navigator>

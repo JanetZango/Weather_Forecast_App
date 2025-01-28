@@ -6,7 +6,7 @@ import Battery from "../assets/battery.svg";
 import Wifi from "../assets/wifi.svg";
 import Mobilesignal from "../assets/mobile-signal.svg";
 import Group3 from "../assets/group3.svg";
-import { View, TextInput, Button, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, TextInput, Button, Text, FlatList, StyleSheet, TouchableOpacity,Alert, Pressable  } from 'react-native';
 import { Color, FontFamily, FontSize, Border } from "../GlobalStyles";
 import { useState, useEffect } from 'react';
 import axios from 'axios';
@@ -113,13 +113,7 @@ const SearchSave = () => {
         console.error('Error saving data:', error);
       }
 
-      // const removeData = async (key) => {
-      //   try {
-      //     await AsyncStorage.removeItem(key);
-      //   } catch (e) {
-      //     console.error('Error removing data', e);
-      //   }
-      // };
+  
 
     } catch (error) {
       console.error(error);
@@ -139,6 +133,11 @@ const SearchSave = () => {
         setSearchedName(searchedname)
         setSearchedHumidity(searchedhumidity)
         // searchweatherdesription(description)
+        // const showAlert = () => {
+          // const showAlert = () => {
+            Alert.alert("Hello", "This is an alert");
+          // };
+        // };
       } else {
         // No value associated with the key
         console.log('No value found for the key');
@@ -167,6 +166,18 @@ const SearchSave = () => {
           placeholder="Enter city name"
           style={{color: 'lightgray'}}
         />
+      
+           <Pressable 
+      onPress={searchCity} 
+      style={({ pressed }) => [
+        {
+          backgroundColor: pressed ? '#fff' : 'transparent',
+        },
+        styles.button
+      ]}
+    >
+      <Text style={styles.text}>Press Me</Text>
+    </Pressable>
         <View style={styles.card}>
           <Text style={styles.MylocationText}>{searchedname}</Text>
           {/* <Image source={{ uri: iconUrl }} style={styles.icon} /> */}
@@ -188,92 +199,14 @@ const SearchSave = () => {
     </View>
 
 
-    // <View style={[styles.searchSave]}  >
-    //   <Logo
-    //     style={[styles.logoIcon, styles.logoIconLayout]}
-    //     width={6}
-    //     height={3}
-    //   />
-    //   <Logo1
-    //     style={[styles.logoIcon1, styles.logoIconLayout]}
-    //     width={6}
-    //     height={3}
-    //   />
-    //   <Text style={styles.learnMoreAboutContainer}>
-    //     {`Learn more about `}
-    //     <Text style={styles.weatherData}>weather data</Text>
-    //     {` and `}
-    //     <Text style={styles.weatherData}>map data</Text>
-    //   </Text>
-    //   <View style={[styles.list1, styles.list1Position,{backgroundColor: '#00094B', flex: 1}]}>
-    //     <Image
-    //       // style={[styles.groupIcon1, styles.rectanglePosition]}
-    //       contentFit="cover"
-    //       source={require("../assets/group1.png")}
-    //     />
-    //     {/* <Text style={[styles.l151, styles.l151Layout]}>L:15°</Text>
-    //     <Text style={[styles.h291, styles.l151Layout]}>H:29°</Text> */}
-    //     <Text style={[styles.partlyCloudy, styles.myLocationPosition]}>
-    //       {weatherstatus}
-    //     </Text>
-    //     <Text style={[styles.myLocation, styles.myLocationPosition]}>
-    //       My Location
-    //     </Text>
-    //     <Text style={[styles.seongnamSi, styles.myLocationPosition]}>
-    //      {cityname}
-    //     </Text>
-    //     <Text style={[styles.text2, styles.l151Position]}>{humidity}°</Text>
-    //   </View>
 
-    //   <View style={[styles.searchBar, styles.searchBarLayout]}>
-    //     <View style={[styles.rectangle, styles.rectangleBg]} />
-
-    //     <TextInput style={[styles.searchForA, styles.text3Typo]} placeholder="Enter city name" onChangeText={setCity}
-    //      />
-    //     <Text style={[styles.text3, styles.text3Typo]}>􀊫</Text>
-
-    //   </View>
-    //   <TouchableOpacity >
-    //       <Text>Search</Text>
-    //     </TouchableOpacity>
-    //   <Text style={[styles.weather, styles.seoulTypo]}>Weather</Text>
-
-    //   <Text style={[styles.text4, styles.l15Typo]}>􀍡</Text>
-    //   <View style={styles.darkModetrueTypedefault}>
-    //     {/* <Image
-    //           // style={styles.groupIcon2}
-    //           contentFit="cover"
-    //           source={require("../assets/group2.png")}
-    //         /> */}
-    //     <View style={[styles.group1, styles.iconLayout]}>
-    //       <Battery
-    //         style={[styles.batteryIcon, styles.iconLayout]}
-    //         width={24}
-    //         height={11}
-    //       />
-    //       <Wifi
-    //         style={[styles.wifiIcon, styles.iconLayout]}
-    //         width={15}
-    //         height={11}
-    //       />
-    //       <Mobilesignal
-    //         style={[styles.mobileSignalIcon, styles.iconLayout]}
-    //         width={17}
-    //         height={11}
-    //       />
-    //     </View>
-    //     <Button title="Search" onPress={searchCity} />
-    //     <Group3 style={styles.groupIcon3} width={54} height={21} />
-    //   </View>
-    //   <View style={[styles.frame, styles.groupPosition]}>
-    //     <View style={[styles.rectangle1, styles.rectangleBg]} />
-    //   </View>
-    //   <View style={[styles.searchSaveChild, styles.l151Position]} />
-    // </View>
   );
 };
 
 const styles = StyleSheet.create({
+  button:{
+    
+  },
   clearButton: {
     backgroundColor: 'transparent', // No background
     // borderWidth: 0, // No border
